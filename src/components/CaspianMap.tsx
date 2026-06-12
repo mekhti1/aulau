@@ -1,7 +1,7 @@
 'use client';
 
-import { MapContainer, TileLayer, CircleMarker, Circle, Popup, useMap } from 'react-leaflet';
-import { useEffect } from 'react';
+import { MapContainer, TileLayer, CircleMarker, Circle, Popup, Polyline, useMap } from 'react-leaflet';
+import { useEffect, useState } from 'react';
 import 'leaflet/dist/leaflet.css';
 
 interface Hydrophone {
@@ -27,27 +27,103 @@ interface Incident {
   status: string;
   lat: number;
   lng: number;
+  timestamp?: string;
 }
 
 interface CaspianMapProps {
   hydrophones: Hydrophone[];
   incidents: Incident[];
+  activeAlert?: Incident | null;
+  teams?: any[];
+  operations?: any[];
 }
 
 function MapBounds() {
   const map = useMap();
   useEffect(() => {
     // Center on Northern Caspian / Mangystau area
-    map.setView([45.5, 50.5], 6);
+    map.setView([43.7, 51.1], 8);
   }, [map]);
   return null;
 }
 
-export default function CaspianMap({ hydrophones, incidents }: CaspianMapProps) {
+// Dynamic interception zone that expands over time
+function DynamicInterceptionZone({ incident }: { incident: Incident }) {
+  const [radiusKm, setRadiusKm] = useState(3);
+
+  useEffect(() => {
+    if (!incident.timestamp) {
+      setRadiusKm(5);
+      return;
+    }
+
+    const updateRadius = () => {
+      const elapsedMinutes = (Date.now() - new Date(incident.timestamp!).getTime()) / 60000;
+      // Assume max speed 90km/h → 1.5km per minute, minimum 3km, max 25km
+      const dynamicRadius = Math.min(25, Math.max(3, elapsedMinutes * 1.5));
+      setRadiusKm(dynamicRadius);
+    };
+
+    updateRadius();
+    const interval = setInterval(updateRadius, 10000); // Update every 10s
+    return () => clearInterval(interval);
+  }, [incident.timestamp]);
+
+  return (
+    <>
+      {/* Outer expanding zone */}
+      <Circle
+        center={[incident.lat, incident.lng]}
+        radius={radiusKm * 1000}
+        pathOptions={{
+          color: '#EF4444',
+          fillColor: '#EF4444',
+          fillOpacity: 0.08,
+          weight: 2,
+          dashArray: '10, 10'
+        }}
+      />
+      {/* Inner core zone */}
+      <Circle
+        center={[incident.lat, incident.lng]}
+        radius={3000}
+        pathOptions={{
+          color: '#DC2626',
+          fillColor: '#DC2626',
+          fillOpacity: 0.15,
+          weight: 2,
+        }}
+      />
+      {/* Center marker */}
+      <CircleMarker
+        center={[incident.lat, incident.lng]}
+        radius={12}
+        className="animate-pulse"
+        pathOptions={{
+          color: '#DC2626',
+          fillColor: '#EF4444',
+          fillOpacity: 0.8,
+          weight: 3,
+        }}
+      >
+        <Popup>
+          <div className="text-sm min-w-[200px]">
+            <div className="font-bold text-red-600 mb-1">🚨 Зона перехвата</div>
+            <p className="text-gray-600">Предполагаемая зона перехвата</p>
+            <p className="text-xs text-gray-500 mt-1">Радиус: {radiusKm.toFixed(1)} км</p>
+            <p className="text-xs text-gray-500">Инцидент: {incident.incidentCode}</p>
+          </div>
+        </Popup>
+      </CircleMarker>
+    </>
+  );
+}
+
+export default function CaspianMap({ hydrophones, incidents, activeAlert, teams = [], operations = [] }: CaspianMapProps) {
   return (
     <MapContainer
-      center={[45.5, 50.5]}
-      zoom={6}
+      center={[43.7, 51.1]}
+      zoom={8}
       className="w-full h-full"
       zoomControl={true}
     >
@@ -99,20 +175,64 @@ export default function CaspianMap({ hydrophones, incidents }: CaspianMapProps) 
                 Статус: <span className="text-gov-success font-medium">●  Активен</span>
               </p>
               <p className="text-gov-text-secondary">
-                Обнаружений: {h.incidents.length}
+                Обнаружений: {h.incidents?.length || 0}
               </p>
-              {h.incidents.length > 0 && (
-                <p className="text-gov-text-secondary text-xs">
-                  Последнее: {new Date(h.incidents[0].timestamp).toLocaleString('ru-RU')}
-                </p>
-              )}
             </div>
           </Popup>
         </CircleMarker>
       ))}
 
+      {/* Response Teams */}
+      {teams.map(t => (
+        <CircleMarker
+          key={`team-${t.id}`}
+          center={[t.lat, t.lng]}
+          radius={8}
+          pathOptions={{
+            color: '#1E40AF',
+            fillColor: '#3B82F6',
+            fillOpacity: 1,
+            weight: 2,
+          }}
+        >
+          <Popup>
+            <div className="text-sm">
+              <h3 className="font-bold text-blue-800">🚤 {t.name}</h3>
+              <p className="text-gov-text-secondary">Статус: {t.available ? 'Доступен' : 'Занят'}</p>
+            </div>
+          </Popup>
+        </CircleMarker>
+      ))}
+
+      {/* Active Alert Interception Zone — Dynamic */}
+      {activeAlert && (
+        <DynamicInterceptionZone incident={activeAlert} />
+      )}
+
+      {/* Operation movement arrows — team to incident */}
+      {operations.filter((op: any) => op.status !== 'CLOSED' && op.incident).map((op: any) => {
+        const team = teams.find((t: any) => t.id === op.teamId);
+        if (!team || !op.incident) return null;
+
+        return (
+          <Polyline
+            key={`op-line-${op.id}`}
+            positions={[
+              [team.lat, team.lng],
+              [op.incident.lat, op.incident.lng],
+            ]}
+            pathOptions={{
+              color: '#EF4444',
+              weight: 3,
+              dashArray: '8, 8',
+              opacity: 0.7,
+            }}
+          />
+        );
+      })}
+
       {/* Incident markers */}
-      {incidents.map((inc) => (
+      {incidents.filter(inc => !activeAlert || inc.id !== activeAlert.id).map((inc) => (
         <CircleMarker
           key={`inc-${inc.id}`}
           center={[inc.lat, inc.lng]}

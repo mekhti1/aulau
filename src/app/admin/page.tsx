@@ -22,6 +22,9 @@ interface Stats {
   totalBatches: number;
   totalIncidents: number;
   totalTransactions: number;
+  totalOperations: number;
+  closedOperations: number;
+  avgResponseTime: number;
   totalWeight: number;
   speciesStats: Array<{ species: string; weight: number }>;
   statusCounts: { PENDING: number; VERIFIED: number; FLAGGED: number };
@@ -86,6 +89,21 @@ export default function AdminDashboard() {
         <div className="stat-card">
           <p className="text-xs text-gov-text-secondary">Общий вес</p>
           <p className="text-2xl font-bold text-primary">{stats.totalWeight} кг</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="stat-card border-l-4 border-red-600 bg-red-50">
+          <p className="text-xs text-gov-text-secondary uppercase">Создано операций</p>
+          <p className="text-3xl font-black text-red-700">{stats.totalOperations}</p>
+        </div>
+        <div className="stat-card border-l-4 border-orange-500 bg-orange-50">
+          <p className="text-xs text-gov-text-secondary uppercase">Ср. время реагирования</p>
+          <p className="text-3xl font-black text-orange-700">{stats.avgResponseTime} мин</p>
+        </div>
+        <div className="stat-card border-l-4 border-green-600 bg-green-50">
+          <p className="text-xs text-gov-text-secondary uppercase">Закрытых операций</p>
+          <p className="text-3xl font-black text-green-700">{stats.closedOperations}</p>
         </div>
       </div>
 

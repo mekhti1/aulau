@@ -7,7 +7,7 @@ export function generateSignature(type: string, code: string): string {
   return CryptoJS.HmacSHA256(message, HMAC_SECRET).toString(CryptoJS.enc.Hex).slice(0, 16);
 }
 
-export function generateQRPayload(type: 'NET' | 'BATCH', code: string): string {
+export function generateQRPayload(type: 'NET' | 'BATCH' | 'PUBLIC' | 'INSPECTOR', code: string): string {
   const signature = generateSignature(type, code);
   return `${type}:${code}:${signature}`;
 }
@@ -26,7 +26,9 @@ export function verifyQRPayload(payload: string): { valid: boolean; type: string
   };
 }
 
-export function getTraceUrl(type: 'NET' | 'BATCH', code: string): string {
+export function getTraceUrl(type: 'NET' | 'BATCH' | 'PUBLIC' | 'INSPECTOR', code: string): string {
+  if (type === 'PUBLIC') return `/trace/public/${code}`;
+  if (type === 'INSPECTOR') return `/trace/batch/${code}`;
   const typePath = type === 'NET' ? 'net' : 'batch';
   return `/trace/${typePath}/${code}`;
 }

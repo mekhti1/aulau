@@ -150,4 +150,52 @@ export const db = {
       return count || 0;
     },
   },
+  response_team: {
+    findMany: async (args?: { where?: Record<string, unknown> }) => {
+      let query = supabaseAdmin.from('response_teams').select('*');
+      if (args?.where) {
+        for (const [key, value] of Object.entries(args.where)) {
+          query = query.eq(key, value);
+        }
+      }
+      query = query.order('name', { ascending: true });
+      const { data } = await query;
+      return data || [];
+    },
+  },
+  operation: {
+    findMany: async (args?: { orderBy?: Record<string, string> }) => {
+      const { data } = await supabaseAdmin
+        .from('operations')
+        .select('*, incident:incidents!incidentId(id, incidentCode, label, confidence, threatLevel, status, lat, lng, timestamp, hydrophone:hydrophones!hydrophoneId(name))')
+        .order('createdAt', { ascending: args?.orderBy?.createdAt === 'asc' });
+      return data || [];
+    },
+    create: async (args: { data: Record<string, unknown> }) => {
+      const { data, error } = await supabaseAdmin.from('operations').insert(args.data).select('*, incident:incidents!incidentId(id, incidentCode, label, confidence, threatLevel, status, lat, lng, timestamp)').single();
+      if (error) console.error('[db.operation.create] error:', error.message);
+      return data;
+    },
+    update: async (args: { where: { id: string }; data: Record<string, unknown> }) => {
+      const { data, error } = await supabaseAdmin.from('operations').update(args.data).eq('id', args.where.id).select('*, incident:incidents!incidentId(id, incidentCode, label, confidence, threatLevel, status, lat, lng, timestamp)').single();
+      if (error) console.error('[db.operation.update] error:', error.message);
+      return data;
+    },
+    count: async (args?: { where?: Record<string, unknown> }) => {
+      let query = supabaseAdmin.from('operations').select('id', { count: 'exact', head: true });
+      if (args?.where) {
+        for (const [key, value] of Object.entries(args.where)) {
+          query = query.eq(key, value);
+        }
+      }
+      const { count } = await query;
+      return count || 0;
+    },
+    aggregate: async (args: { _avg: { estimatedArrival: boolean } }) => {
+      const { data } = await supabaseAdmin.from('operations').select('estimatedArrival');
+      if (!data || data.length === 0) return { _avg: { estimatedArrival: 0 } };
+      const sum = data.reduce((s: number, o: { estimatedArrival: number }) => s + (o.estimatedArrival || 0), 0);
+      return { _avg: { estimatedArrival: Math.round(sum / data.length) } };
+    },
+  },
 };

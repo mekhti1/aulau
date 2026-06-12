@@ -20,6 +20,8 @@ async function main() {
   console.log('🌱 Seeding database...');
 
   // Clean existing data
+  await prisma.operation.deleteMany().catch(() => {});
+  await prisma.responseTeam.deleteMany().catch(() => {});
   await prisma.transaction.deleteMany();
   await prisma.incident.deleteMany();
   await prisma.batch.deleteMany();
