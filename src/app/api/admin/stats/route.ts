@@ -8,12 +8,15 @@ export async function GET() {
     return NextResponse.json({ error: 'Доступ запрещён' }, { status: 403 });
   }
 
-  const [totalFishers, totalNets, totalBatches, totalIncidents, totalTransactions] = await Promise.all([
+  const [totalFishers, totalNets, totalBatches, totalIncidents, totalTransactions, totalOperations, closedOperations, avgResponseTimeResult] = await Promise.all([
     db.user.count({ where: { role: 'FISHER' } }),
     db.net.count(),
     db.batch.count(),
     db.incident.count(),
     db.transaction.count(),
+    db.operation.count(),
+    db.operation.count({ where: { status: 'CLOSED' } }),
+    db.operation.aggregate({ _avg: { estimatedArrival: true } }),
   ]);
 
   const batches = await db.batch.findMany({});
@@ -42,6 +45,9 @@ export async function GET() {
     totalBatches,
     totalIncidents,
     totalTransactions,
+    totalOperations,
+    closedOperations,
+    avgResponseTime: avgResponseTimeResult._avg.estimatedArrival || 0,
     totalWeight: Math.round(totalWeight * 100) / 100,
     speciesStats,
     statusCounts,
