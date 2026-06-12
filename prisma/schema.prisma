@@ -1,0 +1,150 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  FISHER
+  INSPECTOR
+  BUYER
+  ADMIN
+}
+
+enum BatchStatus {
+  PENDING
+  VERIFIED
+  FLAGGED
+}
+
+enum IncidentStatus {
+  OPEN
+  CONFIRMED
+  CLOSED
+}
+
+enum ThreatLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model User {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  passwordHash String
+  name         String
+  role         Role
+  quotaLimitKg Float    @default(0)
+  quotaUsedKg  Float    @default(0)
+  trustScore   Float    @default(5.0)
+  certNumber   String?
+  createdAt    DateTime @default(now())
+
+  nets         Net[]
+  batches      Batch[]
+  purchases    Transaction[]
+  favorites    Favorite[]
+
+  @@map("users")
+}
+
+model Net {
+  id        String   @id @default(uuid())
+  netCode   String   @unique
+  ownerId   String
+  zone      String
+  expiresAt DateTime
+  signature String?
+  createdAt DateTime @default(now())
+
+  owner     User     @relation(fields: [ownerId], references: [id])
+
+  @@map("nets")
+}
+
+model Batch {
+  id         String      @id @default(uuid())
+  batchCode  String      @unique
+  ownerId    String
+  species    String
+  weightKg   Float
+  caughtAt   DateTime
+  lat        Float
+  lng        Float
+  status     BatchStatus @default(PENDING)
+  listed     Boolean     @default(false)
+  sold       Boolean     @default(false)
+  price      Float?
+  signature  String?
+  signedBy   String?
+  signedAt   DateTime?
+  certNumber String?
+  netId      String?
+  createdAt  DateTime    @default(now())
+
+  owner        User          @relation(fields: [ownerId], references: [id])
+  transactions Transaction[]
+
+  @@map("batches")
+}
+
+model Hydrophone {
+  id        String   @id @default(uuid())
+  name      String
+  lat       Float
+  lng       Float
+  radiusKm  Float
+  status    String   @default("active")
+  createdAt DateTime @default(now())
+
+  incidents Incident[]
+
+  @@map("hydrophones")
+}
+
+model Incident {
+  id            String         @id @default(uuid())
+  incidentCode  String         @unique
+  hydrophoneId  String
+  timestamp     DateTime       @default(now())
+  lat           Float
+  lng           Float
+  label         String
+  confidence    Float
+  threatLevel   ThreatLevel
+  status        IncidentStatus @default(OPEN)
+  createdAt     DateTime       @default(now())
+
+  hydrophone    Hydrophone     @relation(fields: [hydrophoneId], references: [id])
+
+  @@map("incidents")
+}
+
+model Transaction {
+  id        String   @id @default(uuid())
+  batchId   String
+  buyerId   String
+  price     Float
+  createdAt DateTime @default(now())
+
+  batch     Batch    @relation(fields: [batchId], references: [id])
+  buyer     User     @relation(fields: [buyerId], references: [id])
+
+  @@map("transactions")
+}
+
+model Favorite {
+  id         String @id @default(uuid())
+  userId     String
+  fisherId   String
+  createdAt  DateTime @default(now())
+
+  user       User   @relation(fields: [userId], references: [id])
+
+  @@map("favorites")
+}
