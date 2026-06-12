@@ -12,10 +12,26 @@ export async function PATCH(
   }
 
   const { id } = await params;
+
+  // Verify the batch
   const batch = await db.batch.update({
     where: { id },
     data: { status: 'VERIFIED' },
   });
 
-  return NextResponse.json({ batch });
+  // Auto-list on marketplace after verification
+  if (batch) {
+    await db.batch.update({
+      where: { id },
+      data: {
+        listed: true,
+        price: Math.round((batch.weightKg || 0) * 2500),
+      },
+    });
+  }
+
+  return NextResponse.json({
+    batch: { ...batch, listed: true },
+    message: 'Партия проверена и выставлена на маркетплейс',
+  });
 }

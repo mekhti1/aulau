@@ -35,6 +35,11 @@ export const db = {
       const { count } = await query;
       return count || 0;
     },
+    create: async (args: { data: Record<string, unknown> }) => {
+      const { data, error } = await supabaseAdmin.from('users').insert(args.data).select().single();
+      if (error) console.error('[db.user.create] error:', error.message);
+      return data;
+    },
   },
   net: {
     findMany: async (args?: { where?: Record<string, unknown>; orderBy?: Record<string, string> }) => {

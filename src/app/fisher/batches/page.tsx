@@ -49,7 +49,7 @@ export default function FisherBatches() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-bold text-gray-900">Мои партии</h1>
+      <h1 className="text-xl font-bold text-gray-900">Мои партии ({batches.length})</h1>
 
       {batches.length === 0 ? (
         <div className="card text-center py-8">
@@ -84,11 +84,21 @@ export default function FisherBatches() {
                 </div>
                 <button
                   onClick={() => setShowQR(showQR === batch.id ? null : batch.id)}
-                  className="btn-secondary text-xs !px-3 !py-1.5"
+                  className={`text-xs !px-3 !py-1.5 ${
+                    showQR === batch.id ? 'btn-primary' : 'btn-secondary'
+                  }`}
                 >
-                  QR
+                  {showQR === batch.id ? '✕ Закрыть' : '📱 QR код'}
                 </button>
               </div>
+
+              {/* Status message */}
+              {batch.status === 'PENDING' && (
+                <div className="mt-2 flex items-center gap-1.5 text-xs text-yellow-600">
+                  <span className="animate-pulse w-1.5 h-1.5 bg-yellow-500 rounded-full" />
+                  Ожидает проверки инспектором
+                </div>
+              )}
 
               {/* Actions */}
               {batch.status === 'VERIFIED' && !batch.listed && (
@@ -103,12 +113,30 @@ export default function FisherBatches() {
                 </div>
               )}
 
+              {/* QR Code Display */}
               {showQR === batch.id && batch.signature && (
-                <div className="mt-3 pt-3 border-t border-gov-border text-center">
-                  <QRDisplay value={batch.signature} />
-                  <p className="text-xs text-gov-text-secondary mt-2 break-all">
-                    {batch.signature}
-                  </p>
+                <div className="mt-3 pt-3 border-t border-gov-border">
+                  <div className="bg-white border border-gov-border rounded-xl p-4 text-center">
+                    <QRDisplay value={batch.signature} />
+                    <div className="mt-3 space-y-1">
+                      <p className="text-sm font-semibold text-gray-900">{batch.batchCode}</p>
+                      <p className="text-xs text-gov-text-secondary">{batch.species} · {batch.weightKg} кг</p>
+                      <p className="text-xs text-gov-text-secondary">
+                        {new Date(batch.caughtAt).toLocaleDateString('ru-RU')}
+                      </p>
+                    </div>
+                    <div className="mt-3 pt-3 border-t border-gov-border">
+                      <p className="text-[10px] text-gov-text-secondary break-all font-mono">
+                        {batch.signature}
+                      </p>
+                    </div>
+                    <a
+                      href={`/trace/batch/${batch.batchCode}`}
+                      className="btn-secondary text-xs mt-3 inline-block"
+                    >
+                      📋 Цифровой паспорт
+                    </a>
+                  </div>
                 </div>
               )}
             </div>
