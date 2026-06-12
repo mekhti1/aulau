@@ -17,6 +17,13 @@ export const db = {
       if (error) console.error('[db.user.findUnique] error:', error.message, 'url:', supabaseUrl);
       return data;
     },
+    findUniqueWithRawError: async (args: { where: { username?: string; id?: string }; select?: Record<string, boolean> }) => {
+      let query = supabaseAdmin.from('users').select('*');
+      if (args.where.username) query = query.eq('username', args.where.username);
+      if (args.where.id) query = query.eq('id', args.where.id);
+      const { data, error } = await query.single();
+      return { data, error };
+    },
     update: async (args: { where: { id: string }; data: Record<string, unknown> }) => {
       const { data, error } = await supabaseAdmin.from('users').update(args.data).eq('id', args.where.id).select().single();
       if (error) console.error('[db.user.update] error:', error.message);

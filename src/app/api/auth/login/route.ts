@@ -14,7 +14,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const user = await db.user.findUnique({ where: { username } });
+    const { data: user, error: dbError } = await db.user.findUniqueWithRawError({ where: { username } });
+
+    if (dbError) {
+      return NextResponse.json(
+        { error: `DB_ERROR: ${dbError.message || JSON.stringify(dbError)}` },
+        { status: 500 }
+      );
+    }
 
     if (!user) {
       return NextResponse.json(
@@ -56,10 +63,10 @@ export async function POST(request: NextRequest) {
     });
 
     return response;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Login error:', error);
     return NextResponse.json(
-      { error: 'Ошибка сервера' },
+      { error: `Ошибка сервера: ${error.message || ''}` },
       { status: 500 }
     );
   }
