@@ -32,24 +32,22 @@ interface Incident {
 interface CaspianMapProps {
   hydrophones: Hydrophone[];
   incidents: Incident[];
-  activeAlert?: Incident | null;
-  teams?: any[];
 }
 
 function MapBounds() {
   const map = useMap();
   useEffect(() => {
     // Center on Northern Caspian / Mangystau area
-    map.setView([43.7, 51.1], 8);
+    map.setView([45.5, 50.5], 6);
   }, [map]);
   return null;
 }
 
-export default function CaspianMap({ hydrophones, incidents, activeAlert, teams = [] }: CaspianMapProps) {
+export default function CaspianMap({ hydrophones, incidents }: CaspianMapProps) {
   return (
     <MapContainer
-      center={[43.7, 51.1]}
-      zoom={8}
+      center={[45.5, 50.5]}
+      zoom={6}
       className="w-full h-full"
       zoomControl={true}
     >
@@ -98,72 +96,23 @@ export default function CaspianMap({ hydrophones, incidents, activeAlert, teams 
                 Радиус покрытия: {h.radiusKm} км
               </p>
               <p className="text-gov-text-secondary">
-                Статус: <span className="text-gov-success font-medium">● Активен</span>
+                Статус: <span className="text-gov-success font-medium">●  Активен</span>
               </p>
               <p className="text-gov-text-secondary">
-                Обнаружений: {h.incidents?.length || 0}
+                Обнаружений: {h.incidents.length}
               </p>
+              {h.incidents.length > 0 && (
+                <p className="text-gov-text-secondary text-xs">
+                  Последнее: {new Date(h.incidents[0].timestamp).toLocaleString('ru-RU')}
+                </p>
+              )}
             </div>
           </Popup>
         </CircleMarker>
       ))}
-
-      {/* Response Teams */}
-      {teams.map(t => (
-        <CircleMarker
-          key={`team-${t.id}`}
-          center={[t.lat, t.lng]}
-          radius={8}
-          pathOptions={{
-            color: '#1E40AF',
-            fillColor: '#3B82F6',
-            fillOpacity: 1,
-            weight: 2,
-          }}
-        >
-          <Popup>
-            <div className="text-sm">
-              <h3 className="font-bold text-blue-800">🚤 {t.name}</h3>
-              <p className="text-gov-text-secondary">Статус: {t.available ? 'Доступен' : 'Занят'}</p>
-            </div>
-          </Popup>
-        </CircleMarker>
-      ))}
-
-      {/* Active Alert Interception Zone */}
-      {activeAlert && (
-        <>
-          <Circle
-            center={[activeAlert.lat, activeAlert.lng]}
-            radius={8000} // 8km interception radius
-            pathOptions={{
-              color: '#EF4444',
-              fillColor: '#EF4444',
-              fillOpacity: 0.15,
-              weight: 2,
-              dashArray: '10, 10'
-            }}
-          />
-          <CircleMarker
-            center={[activeAlert.lat, activeAlert.lng]}
-            radius={12}
-            className="animate-pulse"
-            pathOptions={{
-              color: '#DC2626',
-              fillColor: '#EF4444',
-              fillOpacity: 0.8,
-              weight: 3,
-            }}
-          >
-            <Popup>
-              <div className="text-sm font-bold text-red-600">Зона перехвата</div>
-            </Popup>
-          </CircleMarker>
-        </>
-      )}
 
       {/* Incident markers */}
-      {incidents.filter(inc => !activeAlert || inc.id !== activeAlert.id).map((inc) => (
+      {incidents.map((inc) => (
         <CircleMarker
           key={`inc-${inc.id}`}
           center={[inc.lat, inc.lng]}
