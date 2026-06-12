@@ -922,59 +922,68 @@ function AlertBanner({
   };
 
   return (
-    <div className="bg-red-600 text-white p-4 shadow-lg border-b-4 border-red-800 animate-in fade-in slide-in-from-top-2 duration-500 z-20">
-      <div className="flex items-start gap-4">
-        <div className="flex-shrink-0 bg-white/20 p-3 rounded-xl animate-pulse">
-          <span className="text-3xl block">🚨</span>
+    <div className="bg-red-600 text-white p-3 md:p-4 shadow-lg border-b-4 border-red-800 animate-in fade-in slide-in-from-top-2 duration-500 z-20">
+      <div className="flex flex-col md:flex-row items-start gap-3 md:gap-4">
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <div className="flex-shrink-0 bg-white/20 p-2 md:p-3 rounded-xl animate-pulse">
+            <span className="text-2xl md:text-3xl block">🚨</span>
+          </div>
+          <h2 className="text-base md:text-lg font-bold uppercase tracking-wide md:hidden flex-1">
+            РЕЖИМ ТРЕВОГИ
+          </h2>
         </div>
-        <div className="flex-1">
-          <h2 className="text-lg font-bold uppercase tracking-wide mb-2 flex items-center gap-2">
+        
+        <div className="flex-1 w-full">
+          <h2 className="hidden md:flex text-lg font-bold uppercase tracking-wide mb-2 items-center gap-2">
             ВНИМАНИЕ! РЕЖИМ ТРЕВОГИ
             <span className="bg-white/20 px-2 py-0.5 rounded text-xs">Автоматическое обнаружение</span>
           </h2>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-            <div>
-              <p className="text-red-200 text-xs uppercase font-medium">Инцидент</p>
-              <p className="font-mono font-semibold">{incident.incidentCode}</p>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4 mb-3">
+            <div className="bg-black/10 p-2 rounded-lg">
+              <p className="text-red-200 text-[10px] md:text-xs uppercase font-medium">Инцидент</p>
+              <p className="font-mono font-semibold text-sm md:text-base">{incident.incidentCode}</p>
             </div>
-            <div>
-              <p className="text-red-200 text-xs uppercase font-medium">Источник</p>
-              <p className="font-semibold">{incident.hydrophone?.name || 'Н/Д'}</p>
+            <div className="bg-black/10 p-2 rounded-lg">
+              <p className="text-red-200 text-[10px] md:text-xs uppercase font-medium">Источник</p>
+              <p className="font-semibold text-sm md:text-base truncate">{incident.hydrophone?.name || 'Н/Д'}</p>
             </div>
-            <div>
-              <p className="text-red-200 text-xs uppercase font-medium">Обнаружение</p>
-              <p className="font-semibold">{incident.label}</p>
+            <div className="bg-black/10 p-2 rounded-lg">
+              <p className="text-red-200 text-[10px] md:text-xs uppercase font-medium">Обнаружение</p>
+              <p className="font-semibold text-sm md:text-base truncate">{incident.label}</p>
             </div>
-            <div>
-              <p className="text-red-200 text-xs uppercase font-medium">Достоверность</p>
-              <p className="font-semibold text-xl">{Math.round(incident.confidence)}%</p>
+            <div className="bg-black/10 p-2 rounded-lg flex flex-col justify-center">
+              <p className="text-red-200 text-[10px] md:text-xs uppercase font-medium">Достоверность</p>
+              <p className="font-semibold text-base md:text-xl">{Math.round(incident.confidence)}%</p>
             </div>
           </div>
 
-          <div className="bg-black/20 rounded-lg p-3 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="bg-black/20 rounded-lg p-3 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
             <div className="flex-1">
-              <p className="text-sm font-medium mb-1 flex items-center gap-2">
-                <span>💡</span> Оперативная рекомендация:
-              </p>
-              <p className="text-sm text-red-100">
-                Высокая вероятность браконьерства. Рекомендуется направить ближайшую мобильную группу для проведения проверки.
-              </p>
+              <div className="hidden md:block">
+                <p className="text-sm font-medium mb-1 flex items-center gap-2">
+                  <span>💡</span> Рекомендация:
+                </p>
+                <p className="text-xs text-red-100 mb-2">
+                  Направить ближайшую группу для проверки.
+                </p>
+              </div>
+              
               {nearestTeam ? (
-                <div className="mt-2 flex gap-4 text-sm bg-white/10 inline-flex px-3 py-1.5 rounded-lg border border-white/20">
-                  <span><span className="text-red-200">Группа:</span> {nearestTeam.name}</span>
-                  <span><span className="text-red-200">Расстояние:</span> {minDistance.toFixed(1)} км</span>
-                  <span className="font-bold text-yellow-300"><span className="text-red-200 font-normal">Время прибытия:</span> ~{etaMinutes} мин</span>
+                <div className="flex flex-wrap gap-2 text-xs bg-white/10 px-2 py-1.5 rounded border border-white/20">
+                  <span className="whitespace-nowrap"><span className="text-red-200">Группа:</span> {nearestTeam.name}</span>
+                  <span className="whitespace-nowrap"><span className="text-red-200">Расст:</span> {minDistance.toFixed(1)} км</span>
+                  <span className="font-bold text-yellow-300 whitespace-nowrap"><span className="text-red-200 font-normal">Время:</span> ~{etaMinutes} мин</span>
                 </div>
               ) : (
-                <p className="text-sm mt-2 text-yellow-300">Нет доступных групп реагирования.</p>
+                <p className="text-xs text-yellow-300 py-1">Нет доступных групп.</p>
               )}
             </div>
             
             <button
               onClick={handleCreateOperation}
               disabled={!nearestTeam || creating}
-              className="bg-white text-red-600 hover:bg-gray-100 font-bold py-3 px-6 rounded-lg shadow-md transition-transform hover:scale-105 whitespace-nowrap"
+              className="bg-white text-red-600 hover:bg-gray-100 font-bold py-2 md:py-3 px-4 md:px-6 rounded-lg shadow-md transition-transform hover:scale-105 whitespace-nowrap text-sm md:text-base w-full sm:w-auto"
             >
               {creating ? 'Создание...' : '⚡ Создать операцию'}
             </button>
