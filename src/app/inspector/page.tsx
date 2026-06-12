@@ -192,9 +192,9 @@ export default function InspectorDashboard() {
   const activeAlert = activeAlerts.length > 0 ? activeAlerts[0] : null;
 
   return (
-    <div className="flex flex-col lg:flex-row h-[calc(100vh-56px)]">
+    <div className="flex flex-col lg:flex-row min-h-[calc(100vh-56px)] lg:h-[calc(100vh-56px)]">
       {/* Map */}
-      <div className="flex-1 relative min-h-[300px] lg:min-h-0 flex flex-col">
+      <div className="w-full lg:flex-1 relative flex flex-col lg:min-h-0 shrink-0">
         {activeAlert && (
           <AlertBanner 
             incident={activeAlert} 
@@ -205,7 +205,7 @@ export default function InspectorDashboard() {
             }} 
           />
         )}
-        <div className="flex-1">
+        <div className="h-[250px] sm:h-[350px] lg:h-auto lg:flex-1">
           <CaspianMap 
             hydrophones={hydrophones} 
             incidents={incidents} 
@@ -217,9 +217,9 @@ export default function InspectorDashboard() {
       </div>
 
       {/* Side Panel */}
-      <div className="w-full lg:w-[460px] bg-white border-l border-gov-border overflow-y-auto flex flex-col">
+      <div className="w-full lg:w-[460px] bg-white border-t lg:border-t-0 lg:border-l border-gov-border lg:overflow-y-auto flex flex-col shrink-0">
         {/* Tabs */}
-        <div className="flex border-b border-gov-border sticky top-0 bg-white z-10 overflow-x-auto custom-scrollbar">
+        <div className="flex border-b border-gov-border sticky top-[56px] lg:top-0 bg-white z-10 overflow-x-auto custom-scrollbar shadow-sm lg:shadow-none">
           <button
             onClick={() => setActiveTab('operations')}
             className={`flex-1 py-3 px-3 text-sm font-medium transition-colors whitespace-nowrap ${
