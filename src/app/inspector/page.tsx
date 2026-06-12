@@ -219,7 +219,7 @@ export default function InspectorDashboard() {
       {/* Side Panel */}
       <div className="w-full lg:w-[460px] bg-white border-t lg:border-t-0 lg:border-l border-gov-border lg:overflow-y-auto flex flex-col shrink-0">
         {/* Tabs */}
-        <div className="flex border-b border-gov-border sticky top-[56px] lg:top-0 bg-white z-10 overflow-x-auto custom-scrollbar shadow-sm lg:shadow-none">
+        <div className="flex border-b border-gov-border sticky top-[56px] lg:top-0 bg-white z-10 overflow-x-auto custom-scrollbar shadow-sm lg:shadow-none shrink-0">
           <button
             onClick={() => setActiveTab('operations')}
             className={`flex-1 py-3 px-3 text-sm font-medium transition-colors whitespace-nowrap ${
