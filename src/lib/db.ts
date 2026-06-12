@@ -10,14 +10,16 @@ export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 export const db = {
   user: {
     findUnique: async (args: { where: { username?: string; id?: string }; select?: Record<string, boolean> }) => {
-      const query = supabaseAdmin.from('users').select('*');
-      if (args.where.username) query.eq('username', args.where.username);
-      if (args.where.id) query.eq('id', args.where.id);
-      const { data } = await query.single();
+      let query = supabaseAdmin.from('users').select('*');
+      if (args.where.username) query = query.eq('username', args.where.username);
+      if (args.where.id) query = query.eq('id', args.where.id);
+      const { data, error } = await query.single();
+      if (error) console.error('[db.user.findUnique] error:', error.message, 'url:', supabaseUrl);
       return data;
     },
     update: async (args: { where: { id: string }; data: Record<string, unknown> }) => {
-      const { data } = await supabaseAdmin.from('users').update(args.data).eq('id', args.where.id).select().single();
+      const { data, error } = await supabaseAdmin.from('users').update(args.data).eq('id', args.where.id).select().single();
+      if (error) console.error('[db.user.update] error:', error.message);
       return data;
     },
     count: async (args?: { where?: Record<string, unknown> }) => {
@@ -36,9 +38,9 @@ export const db = {
       return data || [];
     },
     findUnique: async (args: { where: { netCode?: string; id?: string } }) => {
-      const query = supabaseAdmin.from('nets').select('*, owner:users!ownerId(name, username, trustScore)');
-      if (args.where.netCode) query.eq('netCode', args.where.netCode);
-      if (args.where.id) query.eq('id', args.where.id);
+      let query = supabaseAdmin.from('nets').select('*, owner:users!ownerId(name, username, trustScore)');
+      if (args.where.netCode) query = query.eq('netCode', args.where.netCode);
+      if (args.where.id) query = query.eq('id', args.where.id);
       const { data } = await query.single();
       return data;
     },
@@ -69,9 +71,9 @@ export const db = {
       if (args.include?.transactions) {
         selectStr += ', transactions(*, buyer:users!buyerId(name))';
       }
-      const query = supabaseAdmin.from('batches').select(selectStr);
-      if (args.where.batchCode) query.eq('batchCode', args.where.batchCode);
-      if (args.where.id) query.eq('id', args.where.id);
+      let query = supabaseAdmin.from('batches').select(selectStr);
+      if (args.where.batchCode) query = query.eq('batchCode', args.where.batchCode);
+      if (args.where.id) query = query.eq('id', args.where.id);
       const { data } = await query.single();
       return data;
     },
@@ -91,7 +93,6 @@ export const db = {
   hydrophone: {
     findMany: async () => {
       const { data } = await supabaseAdmin.from('hydrophones').select('*, incidents(id, incidentCode, timestamp)').order('createdAt', { ascending: false });
-      // Sort incidents by timestamp descending and take 5
       return (data || []).map(h => ({
         ...h,
         incidents: (h.incidents || []).sort((a: { timestamp: string }, b: { timestamp: string }) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).slice(0, 5),
